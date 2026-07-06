@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from "./api";
 
-const API_URL = "http://localhost:5000/api/projects";
+const RESOURCE = "/projects";
 
 class ProjectService {
   /**
@@ -8,7 +8,7 @@ class ProjectService {
    */
   static async getAllProjects(limit = 50, offset = 0, status = null, sortBy = "createdAt", sortOrder = "DESC") {
     try {
-      const response = await axios.get(API_URL, {
+      const response = await axios.get(RESOURCE, {
         params: { limit, offset, status, sortBy, sortOrder },
       });
       return response.data;
@@ -23,7 +23,7 @@ class ProjectService {
    */
   static async searchProjects(searchTerm, limit = 50, offset = 0) {
     try {
-      const response = await axios.get(`${API_URL}/search/query`, {
+      const response = await axios.get(`${RESOURCE}/search/query`, {
         params: { q: searchTerm, limit, offset },
       });
       return response.data;
@@ -38,7 +38,7 @@ class ProjectService {
    */
   static async getProjectById(id) {
     try {
-      const response = await axios.get(`${API_URL}/${id}`);
+      const response = await axios.get(`${RESOURCE}/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching project:", error);
@@ -51,7 +51,7 @@ class ProjectService {
    */
   static async getProjectStats() {
     try {
-      const response = await axios.get(`${API_URL}/stats/overview`);
+      const response = await axios.get(`${RESOURCE}/stats/overview`);
       return response.data;
     } catch (error) {
       console.error("Error fetching project stats:", error);
@@ -64,7 +64,7 @@ class ProjectService {
    */
   static async getProjectsByDateRange(startDate, endDate) {
     try {
-      const response = await axios.get(`${API_URL}/range/filter`, {
+      const response = await axios.get(`${RESOURCE}/range/filter`, {
         params: { startDate, endDate },
       });
       return response.data;
@@ -79,7 +79,7 @@ class ProjectService {
    */
   static async createProject(projectData) {
     try {
-      const response = await axios.post(API_URL, projectData);
+      const response = await axios.post(RESOURCE, projectData);
       return response.data;
     } catch (error) {
       console.error("Error creating project:", error);
@@ -92,7 +92,7 @@ class ProjectService {
    */
   static async updateProject(id, projectData) {
     try {
-      const response = await axios.put(`${API_URL}/${id}`, projectData);
+      const response = await axios.put(`${RESOURCE}/${id}`, projectData);
       return response.data;
     } catch (error) {
       console.error("Error updating project:", error);
@@ -105,7 +105,7 @@ class ProjectService {
    */
   static async deleteProject(id) {
     try {
-      const response = await axios.delete(`${API_URL}/${id}`);
+      const response = await axios.delete(`${RESOURCE}/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting project:", error);
@@ -118,7 +118,7 @@ class ProjectService {
    */
   static async updateProjectStatus(id, status) {
     try {
-      const response = await axios.patch(`${API_URL}/${id}/status`, { status });
+      const response = await axios.patch(`${RESOURCE}/${id}/status`, { status });
       return response.data;
     } catch (error) {
       console.error("Error updating project status:", error);
@@ -131,7 +131,7 @@ class ProjectService {
    */
   static async archiveProject(id) {
     try {
-      const response = await axios.patch(`${API_URL}/${id}/archive`);
+      const response = await axios.patch(`${RESOURCE}/${id}/archive`);
       return response.data;
     } catch (error) {
       console.error("Error archiving project:", error);

@@ -1,6 +1,6 @@
-import axios from "axios";
+import api from "./api";
 
-const API_URL = "http://localhost:5000/api/events";
+const RESOURCE = "/events";
 
 class EventService {
   static async getAllEvents(limit = 50, offset = 0, projectId = null, status = null, sortBy = "createdAt", sortOrder = "DESC") {
@@ -9,7 +9,7 @@ class EventService {
       if (projectId) params.projectId = projectId;
       if (status) params.status = status;
 
-      const response = await axios.get(API_URL, { params });
+      const response = await api.get(RESOURCE, { params });
       return response.data;
     } catch (error) {
       console.error("Error fetching events:", error);
@@ -22,7 +22,7 @@ class EventService {
       const params = { query: searchTerm };
       if (projectId) params.projectId = projectId;
 
-      const response = await axios.get(`${API_URL}/search`, { params });
+      const response = await api.get(`${RESOURCE}/search`, { params });
       return response.data;
     } catch (error) {
       console.error("Error searching events:", error);
@@ -32,7 +32,7 @@ class EventService {
 
   static async getEventById(id) {
     try {
-      const response = await axios.get(`${API_URL}/${id}`);
+      const response = await api.get(`${RESOURCE}/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching event:", error);
@@ -42,7 +42,7 @@ class EventService {
 
   static async getEventsByProject(projectId) {
     try {
-      const response = await axios.get(`${API_URL}/project/${projectId}`);
+      const response = await api.get(`${RESOURCE}/project/${projectId}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching project events:", error);
@@ -55,7 +55,7 @@ class EventService {
       const params = {};
       if (projectId) params.projectId = projectId;
 
-      const response = await axios.get(`${API_URL}/stats`, { params });
+      const response = await api.get(`${RESOURCE}/stats`, { params });
       return response.data;
     } catch (error) {
       console.error("Error fetching event stats:", error);
@@ -68,7 +68,7 @@ class EventService {
       const params = { startDate, endDate };
       if (projectId) params.projectId = projectId;
 
-      const response = await axios.get(`${API_URL}/range`, { params });
+      const response = await api.get(`${RESOURCE}/range`, { params });
       return response.data;
     } catch (error) {
       console.error("Error fetching events by date range:", error);
@@ -78,7 +78,7 @@ class EventService {
 
   static async createEvent(data) {
     try {
-      const response = await axios.post(API_URL, data);
+      const response = await api.post(RESOURCE, data);
       return response.data;
     } catch (error) {
       console.error("Error creating event:", error);
@@ -88,7 +88,7 @@ class EventService {
 
   static async updateEvent(id, data) {
     try {
-      const response = await axios.put(`${API_URL}/${id}`, data);
+      const response = await api.put(`${RESOURCE}/${id}`, data);
       return response.data;
     } catch (error) {
       console.error("Error updating event:", error);
@@ -98,7 +98,7 @@ class EventService {
 
   static async updateEventStatus(id, status) {
     try {
-      const response = await axios.patch(`${API_URL}/${id}/status`, { status });
+      const response = await api.patch(`${RESOURCE}/${id}/status`, { status });
       return response.data;
     } catch (error) {
       console.error("Error updating event status:", error);
@@ -108,7 +108,7 @@ class EventService {
 
   static async deleteEvent(id) {
     try {
-      const response = await axios.delete(`${API_URL}/${id}`);
+      const response = await api.delete(`${RESOURCE}/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting event:", error);

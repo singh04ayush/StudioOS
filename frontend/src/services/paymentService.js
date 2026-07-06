@@ -1,6 +1,6 @@
-import axios from "axios";
+import api from "./api";
 
-const API_URL = "http://localhost:5000/api/payments";
+const RESOURCE = "/payments";
 
 class PaymentService {
   /**
@@ -8,7 +8,7 @@ class PaymentService {
    */
   static async getAllPayments(limit = 50, offset = 0) {
     try {
-      const response = await axios.get(API_URL, {
+      const response = await api.get(RESOURCE, {
         params: { limit, offset },
       });
       return response.data;
@@ -23,7 +23,7 @@ class PaymentService {
    */
   static async getPaymentsByProject(projectId) {
     try {
-      const response = await axios.get(`${API_URL}/project/${projectId}`);
+      const response = await api.get(`${RESOURCE}/project/${projectId}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching project payments:", error);
@@ -36,7 +36,7 @@ class PaymentService {
    */
   static async getPaymentById(id) {
     try {
-      const response = await axios.get(`${API_URL}/${id}`);
+      const response = await api.get(`${RESOURCE}/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching payment:", error);
@@ -49,7 +49,7 @@ class PaymentService {
    */
   static async getPaymentStats() {
     try {
-      const response = await axios.get(`${API_URL}/stats/overview`);
+      const response = await api.get(`${RESOURCE}/stats/overview`);
       return response.data;
     } catch (error) {
       console.error("Error fetching payment stats:", error);
@@ -62,7 +62,7 @@ class PaymentService {
    */
   static async getPendingPayments() {
     try {
-      const response = await axios.get(`${API_URL}/pending/list`);
+      const response = await api.get(`${RESOURCE}/pending/list`);
       return response.data;
     } catch (error) {
       console.error("Error fetching pending payments:", error);
@@ -75,7 +75,7 @@ class PaymentService {
    */
   static async getPaymentsByDateRange(startDate, endDate) {
     try {
-      const response = await axios.get(`${API_URL}/range/filter`, {
+      const response = await api.get(`${RESOURCE}/range/filter`, {
         params: { startDate, endDate },
       });
       return response.data;
@@ -90,7 +90,7 @@ class PaymentService {
    */
   static async createPayment(paymentData) {
     try {
-      const response = await axios.post(API_URL, paymentData);
+      const response = await api.post(RESOURCE, paymentData);
       return response.data;
     } catch (error) {
       console.error("Error creating payment:", error);
@@ -103,7 +103,7 @@ class PaymentService {
    */
   static async updatePayment(id, paymentData) {
     try {
-      const response = await axios.put(`${API_URL}/${id}`, paymentData);
+      const response = await api.put(`${RESOURCE}/${id}`, paymentData);
       return response.data;
     } catch (error) {
       console.error("Error updating payment:", error);
@@ -116,7 +116,7 @@ class PaymentService {
    */
   static async deletePayment(id) {
     try {
-      const response = await axios.delete(`${API_URL}/${id}`);
+      const response = await api.delete(`${RESOURCE}/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error deleting payment:", error);
