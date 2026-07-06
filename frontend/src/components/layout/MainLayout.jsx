@@ -4,20 +4,14 @@ import { Outlet } from "react-router-dom";
 
 export default function MainLayout() {
   return (
-    <div className="flex h-screen bg-slate-950">
-
+    <div className="app-shell">
       <Sidebar />
-
-      <div className="flex-1 flex flex-col">
-
+      <div className="main-body">
         <Header />
-
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="main-scroll">
           <Outlet />
         </main>
-
       </div>
-
     </div>
   );
 }

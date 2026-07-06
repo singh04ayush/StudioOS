@@ -1,25 +1,65 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, Clock, AlertCircle, Users, DollarSign, FileText } from "lucide-react";
+import {
+  TrendingUp, Clock, AlertCircle, Users,
+  DollarSign, FileText, ArrowRight,
+} from "lucide-react";
 import DashboardService from "../../services/dashboardService";
+
+function StatCard({ label, value, sub, icon: Icon, color }) {
+  return (
+    <div className={`stat-card ${color}`}>
+      <div className="stat-label">
+        {label}
+        <div className={`stat-icon ${color}`}>
+          <Icon size={16} />
+        </div>
+      </div>
+      <div className={`stat-value`} style={{ color: colorValue(color) }}>
+        {value}
+      </div>
+      <div className="stat-sub">{sub}</div>
+    </div>
+  );
+}
+
+function colorValue(c) {
+  return { blue: "#60a5fa", green: "#4ade80", yellow: "#facc15", purple: "#c084fc", cyan: "#22d3ee" }[c] || "#f0f4fc";
+}
+
+function EmptyRow({ msg }) {
+  return (
+    <div className="empty-state">
+      <p style={{ fontSize: 13 }}>{msg}</p>
+    </div>
+  );
+}
+
+function statusBadge(status) {
+  const map = {
+    Completed: "badge badge-green",
+    Ongoing:   "badge badge-blue",
+    Upcoming:  "badge badge-yellow",
+    Archived:  "badge badge-gray",
+  };
+  return map[status] || "badge badge-gray";
+}
 
 export default function Dashboard() {
   const [overview, setOverview] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       const data = await DashboardService.getDashboardOverview();
       setOverview(data);
       setError(null);
     } catch (err) {
-      console.error("Error loading dashboard:", err);
-      setError("Failed to load dashboard data");
+      console.error("Dashboard error:", err);
+      setError("Failed to load dashboard data.");
     } finally {
       setLoading(false);
     }
@@ -27,209 +67,224 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-gray-400">Loading dashboard...</p>
+      <div className="loading-state">
+        <Clock size={18} style={{ opacity: 0.5, animation: "spin 1s linear infinite" }} />
+        <span>Loading dashboard…</span>
       </div>
     );
   }
 
-  const stats = overview?.stats || {};
+  const s = overview?.stats || {};
+  const proj = s.projects  || {};
+  const pay  = s.payments  || {};
+  const cli  = s.clients   || {};
+  const evt  = s.events    || {};
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold">Dashboard 📊</h1>
-        <p className="text-gray-400 mt-2">Welcome back to StudioOS</p>
+    <div>
+      {/* Page header */}
+      <div className="page-header">
+        <h1 className="page-title">Dashboard 📊</h1>
+        <p className="page-subtitle">Welcome back to StudioOS</p>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500 rounded-lg p-4 text-red-400">
+        <div style={{
+          background: "rgba(239,68,68,0.08)",
+          border: "1px solid rgba(239,68,68,0.25)",
+          borderRadius: 12,
+          padding: "12px 16px",
+          color: "#f87171",
+          marginBottom: 24,
+          fontSize: 13,
+        }}>
           {error}
         </div>
       )}
 
-      {/* Statistics Grid */}
-      <div className="grid grid-cols-5 gap-4">
-        {/* Total Projects */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-gray-400 text-sm">Total Projects</div>
-            <FileText size={24} className="text-blue-400" />
-          </div>
-          <div className="text-3xl font-bold">{stats.projects?.totalProjects || 0}</div>
-          <div className="text-gray-500 text-xs mt-2">
-            {stats.projects?.completedProjects || 0} completed
-          </div>
-        </div>
+      {/* Stats row */}
+      <div className="stats-grid">
+        <StatCard
+          label="Total Projects"
+          value={proj.totalProjects ?? 0}
+          sub={`${proj.completedProjects ?? 0} completed`}
+          icon={FileText}
+          color="blue"
+        />
+        <StatCard
+          label="Total Revenue"
+          value={`₹${((proj.totalRevenue ?? 0) / 100000).toFixed(1)}L`}
+          sub={`₹${((pay.totalAmount ?? 0) / 100000).toFixed(1)}L collected`}
+          icon={DollarSign}
+          color="green"
+        />
+        <StatCard
+          label="Pending Amount"
+          value={`₹${((proj.totalPending ?? 0) / 100000).toFixed(1)}L`}
+          sub={`${(pay.totalPayments ?? 0)} payments`}
+          icon={AlertCircle}
+          color="yellow"
+        />
+        <StatCard
+          label="Active Clients"
+          value={cli.activeClients ?? 0}
+          sub={`${cli.totalClients ?? 0} total`}
+          icon={Users}
+          color="purple"
+        />
+        <StatCard
+          label="Upcoming Events"
+          value={evt.scheduledEvents ?? 0}
+          sub={`${evt.totalEvents ?? 0} total events`}
+          icon={Clock}
+          color="cyan"
+        />
+      </div>
 
-        {/* Total Revenue */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-gray-400 text-sm">Total Revenue</div>
-            <DollarSign size={24} className="text-green-400" />
+      {/* Content grid — top row */}
+      <div className="content-grid">
+
+        {/* Recent Projects */}
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">
+              <TrendingUp size={16} style={{ color: "#60a5fa" }} />
+              Recent Projects
+            </span>
+            <a href="/projects" className="btn btn-ghost btn-sm">
+              View all <ArrowRight size={12} />
+            </a>
           </div>
-          <div className="text-3xl font-bold">₹{((stats.projects?.totalRevenue || 0) / 100000).toFixed(1)}L</div>
-          <div className="text-gray-500 text-xs mt-2">
-            ₹{((stats.payments?.totalPayments || 0) / 100000).toFixed(1)}L collected
+
+          <div className="list-items">
+            {overview?.recentProjects?.length > 0 ? (
+              overview.recentProjects.map((p, i) => (
+                <div key={p._id || p.id || i} className="list-item">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4 }}>{p.projectName}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.clientName}</div>
+                    </div>
+                    <span className={statusBadge(p.status)}>{p.status}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8, display: "flex", gap: 16 }}>
+                    <span>₹{((p.totalAmount || 0) / 100000).toFixed(2)}L</span>
+                    <span>{p.eventType}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <EmptyRow msg="No projects yet" />
+            )}
           </div>
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-gray-400 text-sm">Pending Amount</div>
-            <AlertCircle size={24} className="text-yellow-400" />
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">
+              <AlertCircle size={16} style={{ color: "#facc15" }} />
+              Pending Payments
+            </span>
           </div>
-          <div className="text-3xl font-bold text-yellow-400">
-            ₹{((stats.payments?.pendingAmount || 0) / 100000).toFixed(1)}L
-          </div>
-          <div className="text-gray-500 text-xs mt-2">
-            {stats.payments?.pendingPayments || 0} pending
-          </div>
-        </div>
 
-        {/* Active Clients */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-gray-400 text-sm">Active Clients</div>
-            <Users size={24} className="text-purple-400" />
-          </div>
-          <div className="text-3xl font-bold text-purple-400">{stats.clients?.activeClients || 0}</div>
-          <div className="text-gray-500 text-xs mt-2">
-            {stats.clients?.totalClients || 0} total
-          </div>
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-gray-400 text-sm">Upcoming Events</div>
-            <Clock size={24} className="text-cyan-400" />
-          </div>
-          <div className="text-3xl font-bold text-cyan-400">{stats.events?.scheduledEvents || 0}</div>
-          <div className="text-gray-500 text-xs mt-2">
-            {stats.events?.totalEvents || 0} total events
-          </div>
-        </div>
-      </div>
-
-      {/* Content Grid */}
-      <div className="grid grid-cols-2 gap-8">
-        {/* Recent Projects */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <TrendingUp size={20} className="text-blue-400" />
-            Recent Projects
-          </h2>
-          <div className="space-y-3">
-            {overview?.recentProjects?.length > 0 ? (
-              overview.recentProjects.map((project) => (
-                <div key={project.id} className="bg-slate-800/50 rounded-lg p-4 hover:bg-slate-800 transition">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-white">{project.projectName}</h3>
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                      project.status === "Completed" ? "bg-green-600/20 text-green-400" :
-                      project.status === "In Progress" ? "bg-blue-600/20 text-blue-400" :
-                      "bg-gray-600/20 text-gray-400"
-                    }`}>
-                      {project.status}
+          <div className="list-items">
+            {overview?.pendingPayments?.length > 0 ? (
+              overview.pendingPayments.map((p, i) => (
+                <div key={p._id || p.id || i} className="list-item">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{p.projectName || "Project"}</div>
+                    <span style={{ color: "#facc15", fontWeight: 700, fontSize: 14 }}>
+                      ₹{((p.balance || 0) / 100000).toFixed(2)}L
                     </span>
                   </div>
-                  <div className="text-sm text-gray-400">
-                    <p>{project.clientName}</p>
-                    <p className="mt-1">₹{(project.totalAmount / 100000).toFixed(2)}L • {project.eventType}</p>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6 }}>
+                    {p.clientName}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-6">No projects yet</p>
+              <EmptyRow msg="All payments collected ✅" />
             )}
           </div>
         </div>
 
-        {/* Pending Payments */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <AlertCircle size={20} className="text-yellow-400" />
-            Pending Payments
-          </h2>
-          <div className="space-y-3">
-            {overview?.pendingPayments?.length > 0 ? (
-              overview.pendingPayments.map((payment) => (
-                <div key={payment.id} className="bg-slate-800/50 rounded-lg p-4 hover:bg-slate-800 transition">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-white">
-                      {payment.projectName || "Project"}
-                    </h3>
-                    <span className="text-yellow-400 font-bold">₹{(payment.amount / 100000).toFixed(2)}L</span>
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    <p>Mode: {payment.paymentMode}</p>
-                    <p className="mt-1">Due: {new Date(payment.dueDate || Date.now()).toLocaleDateString()}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center py-6">All payments collected! ✅</p>
-            )}
-          </div>
-        </div>
       </div>
 
-      {/* Bottom Grid */}
-      <div className="grid grid-cols-2 gap-8">
+      {/* Bottom grid */}
+      <div className="content-grid">
+
         {/* Upcoming Events */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <Clock size={20} className="text-cyan-400" />
-            Upcoming Events
-          </h2>
-          <div className="space-y-3">
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">
+              <Clock size={16} style={{ color: "#22d3ee" }} />
+              Upcoming Events
+            </span>
+            <a href="/calendar" className="btn btn-ghost btn-sm">
+              View all <ArrowRight size={12} />
+            </a>
+          </div>
+
+          <div className="list-items">
             {overview?.upcomingEvents?.length > 0 ? (
-              overview.upcomingEvents.map((event) => (
-                <div key={event.id} className="bg-slate-800/50 rounded-lg p-4 hover:bg-slate-800 transition">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-white">{event.eventName}</h3>
-                    <span className="text-cyan-400 text-xs font-semibold">{event.eventType}</span>
+              overview.upcomingEvents.map((e, i) => (
+                <div key={e._id || e.id || i} className="list-item">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{e.eventName}</div>
+                    <span className="badge badge-cyan">{e.eventType}</span>
                   </div>
-                  <div className="text-sm text-gray-400">
-                    <p>📍 {event.location}</p>
-                    <p className="mt-1">📅 {new Date(event.eventDate).toLocaleDateString()} at {event.startTime}</p>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 6, display: "flex", gap: 14 }}>
+                    <span>📍 {e.venue || e.location || "—"}</span>
+                    <span>📅 {e.eventDate}</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-6">No upcoming events</p>
+              <EmptyRow msg="No upcoming events" />
             )}
           </div>
         </div>
 
         {/* Active Clients */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-            <Users size={20} className="text-purple-400" />
-            Active Clients
-          </h2>
-          <div className="space-y-3">
+        <div className="card">
+          <div className="card-header">
+            <span className="card-title">
+              <Users size={16} style={{ color: "#c084fc" }} />
+              Active Clients
+            </span>
+            <a href="/clients" className="btn btn-ghost btn-sm">
+              View all <ArrowRight size={12} />
+            </a>
+          </div>
+
+          <div className="list-items">
             {overview?.activeClients?.length > 0 ? (
-              overview.activeClients.slice(0, 5).map((client) => (
-                <div key={client.id} className="bg-slate-800/50 rounded-lg p-4 hover:bg-slate-800 transition">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-white">{client.clientName}</h3>
-                    <span className="text-purple-400 text-xs">Active</span>
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    <p>📧 {client.email}</p>
-                    <p className="mt-1">📱 {client.phone}</p>
+              overview.activeClients.slice(0, 5).map((c, i) => (
+                <div key={c._id || c.id || i} className="list-item">
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: "50%",
+                      background: "linear-gradient(135deg,#a855f7,#6366f1)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 700, fontSize: 13, flexShrink: 0,
+                    }}>
+                      {(c.name || c.clientName || "?")[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{c.name || c.clientName}</div>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{c.email}</div>
+                    </div>
+                    <span className="badge badge-green" style={{ marginLeft: "auto" }}>Active</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-500 text-center py-6">No active clients</p>
+              <EmptyRow msg="No active clients" />
             )}
           </div>
         </div>
+
       </div>
     </div>
   );
